@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 #include <map>
+#include <cmath>
 
 using namespace std;
 
@@ -136,18 +137,23 @@ private:
     }
 
     vector<Document> FindAllDocuments(const Query& query) const {
-        map<int,int> relevance; // словарь id, количество плюс-слов
+        map<int,double> relevance; // словарь id, релеватность
+        double idf = 0.0;
        for (const string& plus : query.plus_words) { // циклом проходим по плюс множеству плюс-слов
-           if (documents_.count(plus) > 0) { // если в контейнере всех документов есть плюс-слово
-               for (int x : documents_.at(plus)) { //то проходим циклом по множеству id документов с найденным словом
-                 ++relevance[x]; // добавляем ключ - id документа и увеличиваем количество плюс-слов, содержащихся в документе
+           if (word_to_document_freqs_.count(plus) > 0) { // если в контейнере всех документов есть плюс-слово
+              idf = word_to_document_freqs_.size() / word_to_document_freqs_.at(plus).size(); // рассчитваем idf слова
+               
+               cout << word_to_document_freqs_.size() << " "s << word_to_document_freqs_.at(plus).size() <<  " "s << plus << " "s << idf << endl;
+               
+               for (const auto& [id, tf] : word_to_document_freqs_.at(plus)) { // проходим циклом по множеству id документов с найденным словом
+                 relevance[id] = tf * idf; // добавляем ключ - id документа и увеличиваем количество плюс-слов, содержащихся в документе
                                                }
                                            }
                                                  }
    
           for (const string& minus : query.minus_words) {
-             if (documents_.count(minus) > 0) {
-                for (int id : documents_.at(minus)) {
+             if (word_to_document_freqs_.count(minus) > 0) {
+                for (const auto& [id, tf] : word_to_document_freqs_.at(minus)) {
                  relevance.erase(id);
                 }
              }
@@ -184,4 +190,3 @@ int main() {
              << "relevance = "s << relevance << " }"s << endl;
     }
 }
-
