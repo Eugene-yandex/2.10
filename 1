@@ -59,12 +59,13 @@ public:
 
     void AddDocument(int document_id, const string& document) {
         const vector<string> words = SplitIntoWordsNoStop(document);
-        double tf = 0.0;
+         double tf = 0.0;
         for (string word : words) {
-        tf = static_cast<double>(count(words.begin(), words.end(), word)) / words.size();
-        word_to_document_freqs_[word].insert({document_id,tf});
+            tf = static_cast<double>(count(words.begin(), words.end(), word)) / words.size();
+           word_to_document_freqs_[word].insert({document_id,tf});
         }
-   }
+++document_count_;
+    }
 
     vector<Document> FindTopDocuments(const string& raw_query) const {
         const Query query = ParseQuery(raw_query);
@@ -139,14 +140,12 @@ private:
     vector<Document> FindAllDocuments(const Query& query) const {
         map<int,double> relevance; // словарь id, релеватность
         double idf = 0.0;
-       for (const string& plus : query.plus_words) { // циклом проходим по плюс множеству плюс-слов
+       for (const string& plus : query.plus_words) { // циклом проходим по множеству плюс-слов
            if (word_to_document_freqs_.count(plus) > 0) { // если в контейнере всех документов есть плюс-слово
-              idf = word_to_document_freqs_.size() / word_to_document_freqs_.at(plus).size(); // рассчитваем idf слова
-               
-               cout << word_to_document_freqs_.size() << " "s << word_to_document_freqs_.at(plus).size() <<  " "s << plus << " "s << idf << endl;
-               
+              idf = log(document_count_ *1.0/ word_to_document_freqs_.at(plus).size()) ; // рассчитваем idf слова
                for (const auto& [id, tf] : word_to_document_freqs_.at(plus)) { // проходим циклом по множеству id документов с найденным словом
-                 relevance[id] = tf * idf; // добавляем ключ - id документа и увеличиваем количество плюс-слов, содержащихся в документе
+     
+                 relevance[id] += tf * idf; // добавляем ключ - id документа и увеличиваем количество плюс-слов, содержащихся в документе
                                                }
                                            }
                                                  }
